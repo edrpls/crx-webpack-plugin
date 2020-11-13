@@ -1,8 +1,8 @@
-var fs = require('fs');
-var path = require('path');
+var fs = require("fs");
+var path = require("path");
 var join = path.join;
-var mkdirp = require('mkdirp');
-var ChromeExtension = require('crx');
+var mkdirp = require("mkdirp");
+var ChromeExtension = require("crx");
 
 function Plugin(options) {
   this.options = options || {};
@@ -18,9 +18,15 @@ function Plugin(options) {
 
   // setup paths
   this.context = path.dirname(module.parent.filename);
-  this.keyFile = path.isAbsolute(this.options.keyFile) ? this.options.keyFile : join(this.context, this.options.keyFile);
-  this.outputPath = path.isAbsolute(this.options.outputPath) ? this.options.outputPath : join(this.context, this.options.outputPath);
-  this.contentPath = path.isAbsolute(this.options.contentPath) ? this.options.contentPath : join(this.context, this.options.contentPath);
+  this.keyFile = path.isAbsolute(this.options.keyFile)
+    ? this.options.keyFile
+    : join(this.context, this.options.keyFile);
+  this.outputPath = path.isAbsolute(this.options.outputPath)
+    ? this.options.outputPath
+    : join(this.context, this.options.outputPath);
+  this.contentPath = path.isAbsolute(this.options.contentPath)
+    ? this.options.contentPath
+    : join(this.context, this.options.contentPath);
 
   // set output info
   this.crxName = this.options.name + ".crx";
@@ -31,31 +37,31 @@ function Plugin(options) {
   // initiate crx
   this.crx = new ChromeExtension({
     privateKey: fs.readFileSync(this.keyFile),
-    codebase: this.options.updateUrl + '/' + this.crxName
+    codebase: this.options.updateUrl + "/" + this.crxName,
   });
 }
 
 // hook into webpack
-Plugin.prototype.apply = function(compiler) {
+Plugin.prototype.apply = function (compiler) {
   var self = this;
-  return compiler.plugin('done', function() {
+  return compiler.plugin("done", function () {
     self.package.call(self);
   });
-}
+};
 
 // package the extension
-Plugin.prototype.package = function() {
+Plugin.prototype.package = function () {
   var self = this;
-  self.crx.load(self.contentPath).then(function() {
-    self.crx.pack().then(function(buffer) {
-      mkdirp(self.outputPath, function(err) {
-        if (err) throw(err)
+  self.crx.load(self.contentPath).then(function () {
+    self.crx.pack().then(function (buffer) {
+      mkdirp(self.outputPath, function (err) {
+        if (err) throw err;
         var updateXML = self.crx.generateUpdateXML();
-        fs.writeFile(self.updateFile, updateXML);
-        fs.writeFile(self.crxFile, buffer);
+        fs.writeFileSync(self.updateFile, updateXML);
+        fs.writeFileSync(self.crxFile, buffer);
       });
     });
   });
-}
+};
 
 module.exports = Plugin;
